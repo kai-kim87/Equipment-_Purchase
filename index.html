@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GG Production 장비 구매 목록</title>
+    <style>
+        /* --- 기본 스타일 및 글꼴 설정 --- */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+        
+        html {
+            scroll-behavior: smooth; /* 부드러운 스크롤 효과 */
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            color: #333;
+            overflow: hidden; 
+            height: 100vh;
+        }
+
+        /* --- 고정 헤더 --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(44, 62, 80, 0.85);
+            backdrop-filter: blur(5px);
+            color: white;
+            padding: 15px 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.3s;
+        }
+
+        header h1 {
+            margin: 0;
+            padding-left: 40px;
+            font-size: 2.0em;
+        }
+
+        /* --- 네비게이션 메뉴 --- */
+        nav {
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 16px;
+            font-size: 1.25em;
+        }
+
+        nav a:hover, nav a.active-nav {
+            color: #29bca4;
+        }
+        
+        .header-placeholder {
+            width: 290px;
+        }
+        
+        /* --- 풀페이지 섹션 설정 --- */
+        main {
+            height: 100vh;
+            width: 100%;
+            overflow-y: scroll;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        main::-webkit-scrollbar {
+             display: none;
+        }
+
+        section {
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 135px 45px 45px 45px;
+        }
+
+        /* --- 섹션별 스타일 --- */
+        #intro { background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; }
+        #colorchecker, #tally { background-color: #f4f7f6; }
+        #lightmeter, #monitor { background-color: #e9ecef; }
+        #conclusion { background-color: #2c3e50; color: white; }
+
+        .content-wrapper {
+            background-color: white;
+            padding: 45px 55px;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 1580px;
+            text-align: left;
+            overflow-x: auto; /* 내용이 넘칠 경우 가로 스크롤 허용 */
+        }
+        
+        .item-layout { display: flex; align-items: center; gap: 55px; }
+        .image-column { flex: 1; }
+        .text-column { flex: 1.5; }
+        .item-image { width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: block; transition: transform 0.3s ease; }
+        .item-image:hover { transform: scale(1.03); }
+        .image-column .item-image + .item-image { margin-top: 20px; }
+        
+        @media (max-width: 1024px) {
+            .item-layout { flex-direction: column; }
+            .content-wrapper { max-height: 80vh; overflow-y: auto; }
+        }
+
+        #intro .content-wrapper, #conclusion .content-wrapper { background: none; box-shadow: none; text-align: center; max-width: 1300px; }
+        #intro .icon { font-size: 5.5em; line-height: 1; text-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        #intro h2 { color: white; font-size: 5.1em; font-weight: 900; border-bottom: none; text-shadow: 0 4px 15px rgba(0,0,0,0.2); margin: 20px 0; }
+        #intro p.description { color: #c7d5e0; font-size: 1.7em; max-width: 1000px; margin: 0 auto; text-align: center; }
+        
+        h2 { font-size: 2.5em; color: #3498db; border-bottom: 3px solid #eaeaea; padding-bottom: 15px; margin-top: 0; margin-bottom: 25px; }
+        h3 { font-size: 1.45em; color: #2980b9; margin-top: 30px; margin-bottom: 15px; }
+        
+        .equipment-item p { font-size: 1.18em; line-height: 1.8; }
+        .equipment-item ul { list-style: none; padding-left: 0; }
+        .equipment-item li { position: relative; padding-left: 28px; margin-bottom: 12px; font-size: 1.18em; }
+        .equipment-item li::before { content: '✓'; position: absolute; left: 0; top: 1px; color: #3498db; font-weight: 700; }
+        .note { background-color: #fff9e6; border-left: 4px solid #f1c40f; padding: 15px 20px; border-radius: 4px; font-size: 1.1em; margin-top: 30px; }
+        
+        /* --- 최종 결론 테이블 스타일 --- */
+        #conclusion h2 { color: white; text-align: center; }
+        #conclusion table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #fff;
+            font-size: 1.25em;
+        }
+        #conclusion th, #conclusion td {
+            padding: 22px 17px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            white-space: nowrap; /* 모든 내용을 한 줄로 표시 */
+        }
+        #conclusion thead th {
+            color: #bdc3c7;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            text-align: center;
+        }
+        #conclusion tbody tr {
+            transition: background-color 0.2s;
+        }
+        #conclusion tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        #conclusion td:nth-child(1) { font-weight: 700; color: #ecf0f1; }
+        #conclusion td:nth-child(3), #conclusion th:nth-child(3) { text-align: center; }
+        #conclusion td:nth-child(4), #conclusion th:nth-child(4) { text-align: right; }
+        #conclusion td:nth-child(5), #conclusion th:nth-child(5) { text-align: right; }
+
+        #conclusion tfoot td {
+            font-weight: 700;
+            font-size: 1.7em;
+        }
+        #conclusion tfoot .total-amount {
+            color: #f1c40f;
+            text-align: right;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>GG Production</h1>
+        <nav>
+            <a href="#intro">Intro</a>
+            <a href="#colorchecker">ColorChecker</a>
+            <a href="#lightmeter">Light Meter</a>
+            <a href="#tally">Tally System</a>
+            <a href="#monitor">Monitor</a>
+            <a href="#conclusion">Conclusion</a>
+        </nav>
+        <div class="header-placeholder"></div>
+    </header>
+
+    <main>
+        <section id="intro">
+            <div class="content-wrapper">
+                <div class="icon">📋</div>
+                <h2>Camera Part 장비 구매목록</h2>
+                <p class="description">방송 품질 향상 및 안정적인 운영을 위한 필수 장비 구매 목록입니다.<br>아래로 스크롤하여 각 항목을 확인하세요.</p>
+            </div>
+        </section>
+
+        <section id="colorchecker">
+            <div class="content-wrapper">
+                <div class="item-layout">
+                    <div class="image-column">
+                        <a href="https://www.coupang.com/vp/products/255803275?itemId=802763085&vendorItemId=3143964472&q=%EC%BB%AC%EB%9F%AC%EC%B2%B4%EC%BB%A4&searchId=3ca673ad4480786&sourceType=search&itemsCount=36&searchRank=2&rank=2" target="_blank">
+                            <img src="컬러체커.jpg" alt="컬러체커" class="item-image">
+                        </a>
+                    </div>
+                    <div class="text-column equipment-item">
+                        <h2>ColorChecker (Color Chart)</h2>
+                        <p>여러 카메라의 색상을 동일한 기준으로 맞추기 위한 절대적인 색상 기준점(Absolute Reference)입니다.</p>
+                        <h3>사용 목적</h3>
+                        <ul>
+                            <li>정확한 기준 설정: 현장 조명 아래에서 메인 카메라의 색상을 가장 정확한 레퍼런스(기준)로 설정합니다.</li>
+                            <li>신속한 색상 통일: 설정한 기준 카메라에 맞춰, 나머지 모든 카메라의 화이트밸런스, 틴트, 채도 등을 빠르고 일관되게 조정합니다.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="lightmeter">
+            <div class="content-wrapper">
+                 <div class="item-layout">
+                    <div class="image-column">
+                        <a href="https://www.coupang.com/vp/products/1911365621?itemId=20900488677&vendorItemId=87967537686&q=%EC%84%B8%EC%BD%94%EB%8B%89+L-478D+LiteMaster+Pro&searchId=cd7e4b6e4091830&sourceType=search&itemsCount=36&searchRank=0&rank=0" target="_blank">
+                            <img src="조도계.png" alt="조도계" class="item-image">
+                        </a>
+                    </div>
+                    <div class="text-column equipment-item">
+                        <h2>조명 조도계 (Light Meter)</h2>
+                        <p>빛의 양(조도, Lux)과 적정 노출값을 정밀하게 측정하는 전문 계측 장비입니다.</p>
+                        <h3>사용 목적</h3>
+                        <ul>
+                            <li>균일한 조명 환경 구축: 테이블 플레이어 좌석의 조도(Lux)를 각각 측정하여 조명의 밝기 편차를 없애고, 모든 위치에 균일한 광량을 확보합니다.</li>
+                            <li>정확한 카메라 노출 설정: 측정된 값을 기반으로 모든 카메라의 노출(조리개, 셔터속도, ISO)을 데이터에 근거하여 정확하고 일관되게 세팅합니다.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tally">
+            <div class="content-wrapper">
+                 <div class="item-layout">
+                    <div class="image-column">
+                        <a href="https://ko.aliexpress.com/item/1005006424630494.html" target="_blank">
+                           <img src="Tally.png" alt="Tally System 구성" class="item-image">
+                        </a>
+                        <img src="Tally 예시.png" alt="Tally 사용 예시" class="item-image">
+                    </div>
+                    <div class="text-column equipment-item">
+                        <h2>Camera Tally System</h2>
+                        <p>Free Camera 감독이, 현재 방송에 송출되는 'On-Air' 카메라에 적색 램프를 켜주는 신호 시스템입니다. 카메라 감독에게 현재 상태를 시각적으로 명확히 전달합니다.</p>
+                        <h3>사용 목적</h3>
+                        <ul>
+                            <li>휴먼 에러 방지: 음성 콜 사인에만 의존할 때 발생하는 촬영 실수나 혼선을 방지하고, 카메라 감독이 자신의 On-Air 상태를 즉각적으로 인지하게 합니다.</li>
+                            <li>방송 안정성 확보: 정확한 카메라 전환을 유도하여 방송 사고를 예방하고, 연출자와 감독 간의 소통을 원활하게 하여 전체적인 방송 흐름을 안정 시킵니다.</li>
+                        </ul>
+                        <div class="note"><strong>참고:</strong> 2개 테이블 운용을 위해 <strong>2세트</strong> 구매 필요</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="monitor">
+            <div class="content-wrapper">
+                 <div class="item-layout">
+                    <div class="image-column">
+                        <a href="디지프러스 TVLogic 견적서 LVM-246a.pdf" target="_blank">
+                            <img src="티비로직.jpg" alt="TVLogic 24인치 모니터" class="item-image">
+                        </a>
+                    </div>
+                    <div class="text-column equipment-item">
+                        <h2>TVLogic 24인치</h2>
+                        <p>기존 17인치 모니터의 노후화: 정확한 색상 표현이 불가능한 상태로, 수리가 필요합니다.</p>
+                        <h3>사용 목적</h3>
+                        <ul>
+                            <li>정확한 색상 기준 확립
+                                <ul style="padding-left: 20px; margin-top: 10px;">
+                                    <li>업계 표준인 TVLogic 레퍼런스 모니터를 통해 모든 영상 작업의 정확한 색상 기준을 세웁니다.</li>
+                                    <li>부정확한 모니터로 인한 시간 및 비용 손실을 막고, 최종 결과물의 신뢰도를 확보하기 위한 필수적인 투자입니다.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <div class="note"><strong>수량:</strong> 2ea<br><strong>별도:</strong> 케이스 별도 제작 (고운미디어, 견적 의뢰 중) 약 1,200,000 ~ 1,500,000 원</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="conclusion">
+            <div class="content-wrapper">
+                <h2>최종 결론</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>품목</th>
+                            <th>모델명 / 공급처</th>
+                            <th>수량</th>
+                            <th>단가</th>
+                            <th>합계</th>
+                            <th>주요 목적</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                         <tr>
+                            <td>컬러체커</td>
+                            <td>SpyderCHECKR</td>
+                            <td>1개</td>
+                            <td>198,000원</td>
+                            <td>198,000원</td>
+                            <td>정확한 색상 기준 설정 및 통일</td>
+                        </tr>
+                        <tr>
+                            <td>조명 조도계</td>
+                            <td>세코닉 L-478D</td>
+                            <td>1대</td>
+                            <td>579,000원</td>
+                            <td>579,000원</td>
+                            <td>균일한 조명 및 정확한 노출 설정</td>
+                        </tr>
+                        <tr>
+                            <td>카메라 탤리</td>
+                            <td>(모델 확인 필요)</td>
+                            <td>2세트</td>
+                            <td>1,350,372원</td>
+                            <td>2,700,744원</td>
+                            <td>휴먼 에러 방지 및 방송 안정성 확보</td>
+                        </tr>
+                        <tr>
+                            <td>레퍼런스 모니터</td>
+                            <td>TVLogic 24인치 / 디지프러스</td>
+                            <td>2대</td>
+                            <td>3,350,000원</td>
+                            <td>6,700,000원</td>
+                            <td>정확한 색상 기준 확립 및 품질 보장</td>
+                        </tr>
+                        <tr>
+                            <td>모니터 케이스</td>
+                            <td>맞춤 제작 / 고운미디어</td>
+                            <td>1개</td>
+                            <td>1,500,000원</td>
+                            <td>1,500,000원</td>
+                            <td>장비 보호 및 이동 편의성 확보</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4">총 합계</td>
+                            <td class="total-amount">11,677,744원</td>
+                            <td>방송 시스템 안정화 및 품질 향상</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+    </main>
+    
+    <script>
+        window.addEventListener('wheel', function(e) { e.preventDefault(); }, { passive: false });
+        let currentSection = 0;
+        const sections = document.querySelectorAll('section');
+        const totalSections = sections.length;
+        let isScrolling = false;
+        const mainContainer = document.querySelector('main');
+
+        mainContainer.addEventListener('wheel', function(e) {
+            if (isScrolling) return;
+            if (e.deltaY > 0) {
+                if (currentSection < totalSections - 1) {
+                    currentSection++;
+                    scrollToSection(currentSection);
+                }
+            } else {
+                if (currentSection > 0) {
+                    currentSection--;
+                    scrollToSection(currentSection);
+                }
+            }
+        });
+
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                for(let i=0; i < totalSections; i++){
+                    if(sections[i].id === targetId){
+                        currentSection = i;
+                        scrollToSection(currentSection);
+                        break;
+                    }
+                }
+            });
+        });
+
+        function scrollToSection(index) {
+            isScrolling = true;
+            const targetSection = sections[index];
+            mainContainer.scrollTo({ top: targetSection.offsetTop, behavior: 'smooth' });
+            document.querySelectorAll('nav a').forEach(a => a.classList.remove('active-nav'));
+            document.querySelector(`nav a[href="#${targetSection.id}"]`).classList.add('active-nav');
+            setTimeout(() => { isScrolling = false; }, 800);
+        }
+        
+        document.querySelector('nav a[href="#intro"]').classList.add('active-nav');
+    </script>
+</body>
+</html>
